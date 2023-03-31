@@ -1,0 +1,23 @@
+@import 'react-big-calendar/lib/css/react-big-calendar.css';
+
+.rbc-toolbar {
+    padding: 0 1rem;
+}
+
+.rbc-toolbar-label {
+    text-align: left !important;
+}
+
+.rbc-event-content {
+    overflow: auto !important;
+    white-space: normal !important;
+    font-size: 0.8rem;
+}
+
+.rbc-row > .rbc-date-cell:first-child {
+    color: red;
+}
+
+.rbc-row > .rbc-date-cell:last-child {
+    color: blue;
+}
