@@ -3,7 +3,7 @@ import './style.css';
 import {Calendar as BigCalendar, dayjsLocalizer, Event, SlotInfo, Views,} from 'react-big-calendar'
 import dayjs from 'dayjs'
 import {useCallback, useEffect, useState} from "react";
-import {CalendarStringUtil, ColorUtil, StringUtil} from "../../utils";
+import {CalendarStringUtil, ColorUtil, DateUtil, StringUtil} from "../../utils";
 import {
     CalendarDialogType,
     CalendarType,
@@ -13,6 +13,8 @@ import {
 import {CalendarDialogTypeEnum, LeaveTimeEnum, LeaveTypeEnum,} from "../../enums";
 import {CalendarDialog} from "./CalendarDialog";
 import {CalendarService, HolidayService} from "../../services";
+import {CalendarSummary} from "./CalendarSummary";
+import {Divider} from "@mui/material";
 
 const localizer = dayjsLocalizer(dayjs);
 
@@ -49,10 +51,15 @@ export default function Calendar() {
 
     const getEvent = useCallback(async (_signal?: AbortSignal) => {
         const data = await CalendarService.getCalendar(_signal ?? signal);
+        console.log(data.map(e => ({
+            ...e,
+            start: DateUtil.dataToDate(e.start),
+            end: DateUtil.dataToDate(e.end),
+        })))
         setEvents(data.map(e => ({
             ...e,
-            start: new Date(e.start),
-            end: new Date(e.end),
+            start: DateUtil.dataToDate(e.start),
+            end: DateUtil.dataToDate(e.end),
         })));
     }, [signal]);
 
@@ -84,8 +91,8 @@ export default function Calendar() {
                         planned: dialogData.planned,
                         leaveType: dialogData.leaveType,
                         leaveTime: dialogData.leaveTime,
-                        start: dialogData.start.toISOString(),
-                        end: dialogData.end.toISOString(),
+                        start: DateUtil.dateToData(dialogData.start),
+                        end: DateUtil.dateToData(dialogData.end),
                     })
                     break;
                 }
@@ -96,8 +103,8 @@ export default function Calendar() {
                         planned: dialogData.planned,
                         leaveType: dialogData.leaveType,
                         leaveTime: dialogData.leaveTime,
-                        start: dialogData.start.toISOString(),
-                        end: dialogData.end.toISOString(),
+                        start: DateUtil.dateToData(dialogData.start),
+                        end: DateUtil.dateToData(dialogData.end),
                     })
                     break;
                 }
@@ -150,20 +157,33 @@ export default function Calendar() {
                     invert
                 } = ColorUtil.getColorByName(e.resource != null ? events[e.resource].name : 'holiday');
                 return {
+                    className: `event-${events[e.resource]?.leaveTime ?? 'holiday'}`,
                     style: {
-                        backgroundColor: color,
-                        color: invert,
+                        ...events[e.resource] == null ? {
+                            cursor: 'default',
+                            color: 'red',
+                            backgroundColor: '#ffffff00',
+                        } : {
+                            backgroundColor: color,
+                            color: invert,
+                        }
                     }
                 }
             }}
             startAccessor="start"
             endAccessor="end"
-            style={{height: '90vh'}}
+            style={{height: '80vh'}}
             views={[Views.MONTH]}
             onSelectSlot={toggleCreateDialog}
             onSelectEvent={toggleUpdateDialog}
             selectable
             showAllEvents
+        />
+        <Divider
+            sx={{pt: 2}}
+        />
+        <CalendarSummary
+            events={events}
         />
     </>
 }

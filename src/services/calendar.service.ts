@@ -1,4 +1,4 @@
-import {CalendarType, ApiCalendarType} from "../types";
+import {CalendarType, ApiCalendarType, ApiGetCalendarType} from "../types";
 import axios from 'axios';
 import {AppConfig} from "../configs";
 
@@ -6,8 +6,8 @@ const api = axios.create({
     baseURL: `${AppConfig.backend}/api/scheduler`
 })
 
-async function getCalendar(signal?: AbortSignal): Promise<Array<CalendarType>> {
-    const {data} = await api.get<Array<CalendarType>>('/', {
+async function getCalendar(signal?: AbortSignal): Promise<Array<ApiGetCalendarType>> {
+    const {data} = await api.get<Array<ApiGetCalendarType>>('/', {
         signal
     });
     return data;

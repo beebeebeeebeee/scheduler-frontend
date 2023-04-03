@@ -9,4 +9,17 @@ function formatToDate(date: Date): string {
     return `${parsed.format('DD/MM/YYYY')} (${dayjs.weekdays()[parsed.weekday()]})`;
 }
 
-export default {formatToDate};
+function dateToData(date: Date): string {
+    const parsed: dayjs.Dayjs = dayjs(date);
+    return `${parsed.format('YYYY-MM-DD')}`;
+}
+
+function dataToDate(date: string): Date {
+    return new Date(`${date} 00:00:00`);
+}
+
+export default {
+    formatToDate,
+    dateToData,
+    dataToDate,
+};

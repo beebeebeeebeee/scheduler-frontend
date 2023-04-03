@@ -5,17 +5,18 @@ import {
     DialogActions,
     DialogContent,
     DialogTitle, Divider, FormControl,
-    FormControlLabel, FormGroup, FormLabel, Radio, RadioGroup,
+    FormControlLabel, FormGroup, FormLabel, InputLabel, MenuItem, Radio, RadioGroup, Select, SelectChangeEvent,
     Stack,
     TextField,
     Typography,
 } from "@mui/material";
 import {CalendarDialogType} from "../../types";
 import React, {useCallback, useState} from "react";
-import {DateUtil} from "../../utils";
+import {ConfirmUtil, DateUtil} from "../../utils";
 import {CalendarDialogTypeEnum, LeaveTimeEnum, LeaveTypeEnum} from "../../enums";
 import {TextValidator, ValidatorForm} from 'react-material-ui-form-validator';
 import {ONE_DAY_MS} from "../../constants";
+import {useConfirm} from "material-ui-confirm";
 
 type CreateDialogProps = {
     state: ReturnType<typeof useState<CalendarDialogType>>
@@ -23,22 +24,44 @@ type CreateDialogProps = {
 
 export function CalendarDialog(props: CreateDialogProps) {
     const {state} = props;
+    const confirm = useConfirm();
+
     const [value, setValue] = state;
 
     const _end = new Date(+(value?.end ?? 0) - ONE_DAY_MS);
     const isOneDay: boolean = +value?.start! === +_end;
 
-    const onSubmit = useCallback(() => {
-        setValue(value => ({...value!, done: true}));
-    }, []);
+    const onSubmit = useCallback(async () => {
+        if (await ConfirmUtil.confirmWrapper(confirm, {
+            title: `are you sure to ${value!.type === CalendarDialogTypeEnum.CREATE ? 'create' : 'update'}?`,
+            dialogProps: {
+                maxWidth: 'xs',
+            },
+            confirmationButtonProps: {
+                autoFocus: true,
+            }
+        })) {
+            setValue(value => ({...value!, done: true}));
+        }
+    }, [confirm, value]);
 
-    const onClose = useCallback(() => {
+    const onClose = useCallback(async () => {
         setValue(value => ({...value!, done: false}));
     }, []);
 
-    const onDelete = useCallback(() => {
-        setValue(value => ({...value!, type: CalendarDialogTypeEnum.DELETE, done: true}));
-    }, []);
+    const onDelete = useCallback(async () => {
+        if (await ConfirmUtil.confirmWrapper(confirm, {
+            title: 'are you sure to delete?',
+            dialogProps: {
+                maxWidth: 'xs',
+            },
+            confirmationButtonProps: {
+                autoFocus: true,
+            }
+        })) {
+            setValue(value => ({...value!, type: CalendarDialogTypeEnum.DELETE, done: true}));
+        }
+    }, [confirm]);
 
     return <Dialog
         open={value !== undefined}
@@ -54,7 +77,7 @@ export function CalendarDialog(props: CreateDialogProps) {
                             fontSize: '2.25rem',
                         }}
                     >
-                        leave at
+                        {value.type !== CalendarDialogTypeEnum.CREATE ? 'update -' : ''} leave at
                     </Typography>
                     <Typography
                         sx={{
@@ -95,6 +118,22 @@ export function CalendarDialog(props: CreateDialogProps) {
                             <Typography>
                                 Information:
                             </Typography>
+                            <FormControl>
+                                <FormLabel>
+                                    type
+                                </FormLabel>
+                                <Select
+                                    value={value.leaveType}
+                                    size='small'
+                                    onChange={(e) => setValue(value => ({...value!, leaveType: e.target.value as any}))}
+                                >
+                                    {
+                                        Object.values(LeaveTypeEnum).map(e =>
+                                            <MenuItem value={e}>{e.replace(/_/g, ' ')}</MenuItem>
+                                        )
+                                    }
+                                </Select>
+                            </FormControl>
                             <FormGroup>
                                 <FormControlLabel
                                     control={<Checkbox
@@ -120,26 +159,6 @@ export function CalendarDialog(props: CreateDialogProps) {
                                             />}
                                             label={e.replace(/_/g, ' ')}
                                         />)
-                                    }
-                                </RadioGroup>
-                            </FormControl>
-                            <FormControl>
-                                <FormLabel>
-                                    type
-                                </FormLabel>
-                                <RadioGroup row>
-                                    {
-                                        Object.values(LeaveTypeEnum).map(e =>
-                                            <FormControlLabel
-                                                key={e}
-                                                value={e}
-                                                control={<Radio
-                                                    checked={value.leaveType === e}
-                                                    onChange={() => setValue(value => ({...value!, leaveType: e}))}
-                                                />}
-                                                label={e.replace(/_/g, ' ')}
-                                            />
-                                        )
                                     }
                                 </RadioGroup>
                             </FormControl>

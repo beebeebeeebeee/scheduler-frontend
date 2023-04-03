@@ -1,6 +1,8 @@
 export enum LeaveTypeEnum {
     ANNUAL_LEAVE = 'AL',
     SICK_LEAVE = 'SL',
+    WFH = 'WFH',
+    CL = 'CL',
     MATERNITY_LEAVE = 'MATL',
     PATERNITY_LEAVE = 'PL',
     MARRIAGE_LEAVE = 'MARL',

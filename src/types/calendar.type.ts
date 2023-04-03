@@ -16,7 +16,28 @@ export type CalendarDialogType = Omit<CalendarType, 'id'> & {
     done?: boolean,
 }
 
+export type ApiGetCalendarType = Omit<CalendarType, 'start' | 'end'> & {
+    start: string,
+    end: string,
+};
+
+
 export type ApiCalendarType = Omit<CalendarType, 'id' | 'start' | 'end'> & {
     start: string,
     end: string,
 };
+
+export type CalendarSummaryType = {
+    row: number;
+    day: {
+        total: CalendarSummaryDayType;
+        solid: CalendarSummaryDayType;
+        planned: CalendarSummaryDayType;
+    }
+    events: Array<CalendarType>;
+}
+
+export type CalendarSummaryDayType = {
+    count: number;
+    type: Partial<Record<LeaveTypeEnum, number>>;
+}

@@ -8,9 +8,21 @@
     text-align: left !important;
 }
 
+.rbc-header {
+    --height: 1.75rem;
+    height: var(--height);
+    line-height: var(--height);
+}
+
 .rbc-event-content {
     overflow: auto !important;
     white-space: normal !important;
+    font-size: 0.8rem;
+}
+
+.event-holiday > .rbc-event-content {
+    overflow: hidden !important;
+    white-space: nowrap !important;
     font-size: 0.8rem;
 }
 
@@ -20,4 +32,14 @@
 
 .rbc-row > .rbc-date-cell:last-child {
     color: blue;
+}
+
+.rbc-row-segment:has(> .event-PM){
+    justify-content: end;
+    display: flex;
+}
+
+.event-AM,
+.event-PM {
+    width: 50%;
 }
