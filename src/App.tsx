@@ -1,13 +1,14 @@
 import {Calendar} from "./components";
+import {Box} from "@mui/material";
 
 export function App() {
     return (
-        <div
-            style={{
-                padding: '1rem',
+        <Box
+            sx={{
+                px: '1rem',
             }}
         >
             <Calendar/>
-        </div>
+        </Box>
     );
 }

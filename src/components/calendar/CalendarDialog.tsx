@@ -129,7 +129,7 @@ export function CalendarDialog(props: CreateDialogProps) {
                                 >
                                     {
                                         Object.values(LeaveTypeEnum).map(e =>
-                                            <MenuItem value={e}>{e.replace(/_/g, ' ')}</MenuItem>
+                                            <MenuItem value={e} key={e}>{e.replace(/_/g, ' ')}</MenuItem>
                                         )
                                     }
                                 </Select>

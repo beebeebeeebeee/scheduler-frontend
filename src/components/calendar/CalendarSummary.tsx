@@ -1,9 +1,8 @@
-import {CalendarSummaryType, CalendarType} from "../../types";
-import {ONE_DAY_MS} from "../../constants";
-import {LeaveTimeEnum, LeaveTypeEnum} from "../../enums";
-import React, {useState} from "react";
+import {CalendarType, UserType} from "../../types";
+import React, {useCallback, useMemo, useState} from "react";
 import {
-    FormControl, FormLabel, MenuItem,
+    Chip,
+    MenuItem,
     Paper, Select, Stack,
     Table,
     TableBody,
@@ -13,71 +12,45 @@ import {
     TableRow,
     Typography
 } from "@mui/material";
-import {CalendarStringUtil} from "../../utils";
+import {CalendarStringUtil, CalendarSummaryUtil, ColorUtil} from "../../utils";
+import {CalendarUserDialog} from "./CalendarUserDialog";
 
 type CreateSummaryProps = {
     events: Array<CalendarType>;
+    users: Array<UserType>;
+    updateUser: (model: UserType) => Promise<void>;
 }
 
 export function CalendarSummary(props: CreateSummaryProps) {
-    const {events} = props;
+    const {events, users, updateUser} = props;
     const [selection, setSelection] = useState<number>(new Date().getFullYear());
+    const summary = useMemo(() => CalendarSummaryUtil.summary(events), [events])
 
-    const summary = events.reduce<Record<number, Record<string, CalendarSummaryType>>>((previousValue, currentValue, currentIndex, array) => {
-        const year: number = currentValue.start.getFullYear();
-        const {name, leaveType} = currentValue;
+    const editUserInfoState = useState<UserType>()
+    const [editUserInfo, setEditUserInfo] = editUserInfoState;
 
-        if (previousValue[year] == null) {
-            previousValue[year] = {}
+    const onEditUser = useCallback((name: string) => {
+        const {color} = ColorUtil.getColorByName(name)
+        setEditUserInfo({
+            name,
+            color
+        })
+    }, []);
+
+    const onSaveUser = useCallback(() => {
+        if (editUserInfo != null) {
+            updateUser(editUserInfo);
         }
-
-        if (previousValue[year][name] == null) {
-            previousValue[year][name] = {
-                row: 0,
-                day: {
-                    total: {
-                        count: 0,
-                        type: {},
-                    },
-                    solid: {
-                        count: 0,
-                        type: {},
-                    },
-                    planned: {
-                        count: 0,
-                        type: {},
-                    },
-                },
-                events: [],
-            };
-        }
-
-        let day = (+currentValue.end - +currentValue.start) / ONE_DAY_MS;
-        if (day === 1 && (currentValue.leaveTime !== LeaveTimeEnum.ALL_DAY)) {
-            day = 0.5;
-        }
-
-        previousValue[year][name].day.total.count += day;
-        previousValue[year][name].day.total.type[leaveType] =
-            (previousValue[year][name].day.total.type[leaveType] ?? 0) + day;
-        if (currentValue.planned) {
-            previousValue[year][name].day.planned.count += day;
-            previousValue[year][name].day.planned.type[leaveType] =
-                (previousValue[year][name].day.planned.type[leaveType] ?? 0) + day;
-        } else {
-            previousValue[year][name].day.solid.count += day;
-            previousValue[year][name].day.solid.type[leaveType] =
-                (previousValue[year][name].day.solid.type[leaveType] ?? 0) + day;
-        }
-
-        previousValue[year][name].row++;
-        previousValue[year][name].events.push(currentValue)
-
-        return previousValue;
-    }, {});
+    }, [editUserInfo]);
 
     return (
         <>
+            <CalendarUserDialog
+                state={editUserInfoState}
+                onSave={() => {
+                    onSaveUser();
+                }}
+            />
             <Stack
                 direction='row'
                 spacing={2}
@@ -96,7 +69,7 @@ export function CalendarSummary(props: CreateSummaryProps) {
                 >
                     {
                         Object.keys(summary).map(e =>
-                            <MenuItem value={e}>{e}</MenuItem>
+                            <MenuItem value={e} key={e}>{e}</MenuItem>
                         )
                     }
                 </Select>
@@ -113,19 +86,37 @@ export function CalendarSummary(props: CreateSummaryProps) {
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {Object.entries(summary[selection] ?? {})?.map(([name, data]) => (
-                            <TableRow
-                                key={name}
-                            >
-                                <TableCell component="th" scope="row">
-                                    {name}
-                                </TableCell>
-                                <TableCell align="right">{CalendarStringUtil.formatSummaryType(data.day.total)}</TableCell>
-                                <TableCell align="right">{CalendarStringUtil.formatSummaryType(data.day.solid)}</TableCell>
-                                <TableCell align="right">{CalendarStringUtil.formatSummaryType(data.day.planned)}</TableCell>
-                                <TableCell align="right">{data.row}</TableCell>
-                            </TableRow>
-                        ))}
+                        {Object.entries(summary[selection] ?? {})?.map(([name, data]) => {
+                            const userColor = users.find(e => e.name === name)
+                            const {color, invert} = userColor != null ? {
+                                color: userColor.color,
+                                invert: ColorUtil.invertColor(userColor.color),
+                            } : ColorUtil.getColorByName(name)
+                            return (
+                                <TableRow
+                                    key={name}
+                                >
+                                    <TableCell component="th" scope="row">
+                                        <Chip
+                                            label={name}
+                                            size="small"
+                                            sx={{
+                                                bgcolor: color,
+                                                color: invert,
+                                            }}
+                                            onClick={() => onEditUser(name)}
+                                        />
+                                    </TableCell>
+                                    <TableCell
+                                        align="right">{CalendarStringUtil.formatSummaryType(data.day.total)}</TableCell>
+                                    <TableCell
+                                        align="right">{CalendarStringUtil.formatSummaryType(data.day.solid)}</TableCell>
+                                    <TableCell
+                                        align="right">{CalendarStringUtil.formatSummaryType(data.day.planned)}</TableCell>
+                                    <TableCell align="right">{data.row}</TableCell>
+                                </TableRow>
+                            )
+                        })}
                     </TableBody>
                 </Table>
             </TableContainer>

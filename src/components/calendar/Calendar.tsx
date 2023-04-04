@@ -1,6 +1,12 @@
 import './style.css';
 
-import {Calendar as BigCalendar, dayjsLocalizer, Event, SlotInfo, Views,} from 'react-big-calendar'
+import {
+    Calendar as BigCalendar,
+    dayjsLocalizer,
+    Event,
+    SlotInfo,
+    Views,
+} from 'react-big-calendar'
 import dayjs from 'dayjs'
 import {useCallback, useEffect, useState} from "react";
 import {CalendarStringUtil, ColorUtil, DateUtil, StringUtil} from "../../utils";
@@ -8,13 +14,15 @@ import {
     CalendarDialogType,
     CalendarType,
     ApiCalendarType,
-    GovHolidayApiVeventType,
+    GovHolidayApiVeventType, UserType,
 } from "../../types";
 import {CalendarDialogTypeEnum, LeaveTimeEnum, LeaveTypeEnum,} from "../../enums";
 import {CalendarDialog} from "./CalendarDialog";
-import {CalendarService, HolidayService} from "../../services";
+import {CalendarService, HolidayService, UserService} from "../../services";
 import {CalendarSummary} from "./CalendarSummary";
-import {Divider} from "@mui/material";
+import {Box, Divider} from "@mui/material";
+import CalendarToolbar from "./CalendarToolbar";
+import * as React from "react";
 
 const localizer = dayjsLocalizer(dayjs);
 
@@ -22,7 +30,8 @@ export default function Calendar() {
     const [signal, setSignal] = useState<AbortSignal>();
 
     const [events, setEvents] = useState<Array<CalendarType>>([]);
-    const [holidays, setHolidays] = useState<GovHolidayApiVeventType[]>();
+    const [holidays, setHolidays] = useState<GovHolidayApiVeventType[]>([]);
+    const [users, setUsers] = useState<Array<UserType>>([]);
 
     const dialogDataState = useState<CalendarDialogType>();
     const [dialogData, setDialogData] = dialogDataState;
@@ -51,17 +60,17 @@ export default function Calendar() {
 
     const getEvent = useCallback(async (_signal?: AbortSignal) => {
         const data = await CalendarService.getCalendar(_signal ?? signal);
-        console.log(data.map(e => ({
-            ...e,
-            start: DateUtil.dataToDate(e.start),
-            end: DateUtil.dataToDate(e.end),
-        })))
         setEvents(data.map(e => ({
             ...e,
             start: DateUtil.dataToDate(e.start),
             end: DateUtil.dataToDate(e.end),
         })));
     }, [signal]);
+
+    const getUser = useCallback(async (_signal?: AbortSignal) => {
+        const data = await UserService.getUser(_signal ?? signal);
+        setUsers(data);
+    }, [signal])
 
     const createEvent = useCallback(async (model: ApiCalendarType) => {
         await CalendarService.createCalendar(model, signal);
@@ -72,6 +81,11 @@ export default function Calendar() {
         await CalendarService.updateCalendar(id, model, signal);
         await getEvent();
     }, [signal]);
+
+    const updateUser = useCallback(async (model: UserType) => {
+        const data = await UserService.updateUser(model, signal);
+        await getUser();
+    }, [signal])
 
     const deleteEvent = useCallback(async (id: number) => {
         await CalendarService.deleteCalendar(id, signal);
@@ -126,6 +140,8 @@ export default function Calendar() {
 
         void getEvent(controller.signal);
 
+        void getUser(controller.signal);
+
         return () => {
             controller.abort();
         }
@@ -152,14 +168,20 @@ export default function Calendar() {
                 })) ?? [])
             ]}
             eventPropGetter={(e) => {
+                const event = events[e.resource];
+                const userColor = event != null ? users.find(e => e.name === event.name) : null;
                 const {
                     color,
                     invert
-                } = ColorUtil.getColorByName(e.resource != null ? events[e.resource].name : 'holiday');
+                } = userColor != null ? {
+                    color: userColor.color,
+                    invert: ColorUtil.invertColor(userColor.color),
+                } : ColorUtil.getColorByName(event?.name ?? 'holiday');
+
                 return {
-                    className: `event-${events[e.resource]?.leaveTime ?? 'holiday'}`,
+                    className: `event-${event?.leaveTime ?? 'holiday'}`,
                     style: {
-                        ...events[e.resource] == null ? {
+                        ...event == null ? {
                             cursor: 'default',
                             color: 'red',
                             backgroundColor: '#ffffff00',
@@ -178,12 +200,17 @@ export default function Calendar() {
             onSelectEvent={toggleUpdateDialog}
             selectable
             showAllEvents
+            components={{
+                toolbar: CalendarToolbar,
+            }}
         />
         <Divider
             sx={{pt: 2}}
         />
         <CalendarSummary
             events={events}
+            users={users}
+            updateUser={updateUser}
         />
     </>
 }

@@ -38,4 +38,4 @@ function invertColor(hex: string, bw: boolean = true): string {
     return "#" + StringUtil.padZero(stringR) + StringUtil.padZero(stringG) + StringUtil.padZero(stringB);
 }
 
-export default {getColorByName};
+export default {getColorByName, invertColor};
