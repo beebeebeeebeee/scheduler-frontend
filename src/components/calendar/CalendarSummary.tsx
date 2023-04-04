@@ -30,12 +30,12 @@ export function CalendarSummary(props: CreateSummaryProps) {
     const [editUserInfo, setEditUserInfo] = editUserInfoState;
 
     const onEditUser = useCallback((name: string) => {
-        const {color} = ColorUtil.getColorByName(name)
+        const {color} = ColorUtil.getColorByUserOrName(users, name)
         setEditUserInfo({
             name,
             color
         })
-    }, []);
+    }, [users]);
 
     const onSaveUser = useCallback(() => {
         if (editUserInfo != null) {
@@ -87,11 +87,7 @@ export function CalendarSummary(props: CreateSummaryProps) {
                     </TableHead>
                     <TableBody>
                         {Object.entries(summary[selection] ?? {})?.map(([name, data]) => {
-                            const userColor = users.find(e => e.name === name)
-                            const {color, invert} = userColor != null ? {
-                                color: userColor.color,
-                                invert: ColorUtil.invertColor(userColor.color),
-                            } : ColorUtil.getColorByName(name)
+                            const {color, invert} = ColorUtil.getColorByUserOrName(users, name)
                             return (
                                 <TableRow
                                     key={name}

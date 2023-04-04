@@ -169,14 +169,10 @@ export default function Calendar() {
             ]}
             eventPropGetter={(e) => {
                 const event = events[e.resource];
-                const userColor = event != null ? users.find(e => e.name === event.name) : null;
                 const {
                     color,
                     invert
-                } = userColor != null ? {
-                    color: userColor.color,
-                    invert: ColorUtil.invertColor(userColor.color),
-                } : ColorUtil.getColorByName(event?.name ?? 'holiday');
+                } = ColorUtil.getColorByUserOrName(users, event?.name ?? 'holiday');
 
                 return {
                     className: `event-${event?.leaveTime ?? 'holiday'}`,

@@ -1,5 +1,14 @@
 import StringUtil from "./string.util";
 import {RANDOM_COLORS} from "../constants";
+import {UserType} from "../types";
+
+function getColorByUserOrName(users: Array<UserType>, name: string) {
+    const userColor = users.find(e => e.name === name)
+    return userColor != null ? {
+        color: userColor.color,
+        invert: invertColor(userColor.color),
+    } : getColorByName(name)
+}
 
 function getColorByName(name?: string): {
     color: string,
@@ -38,4 +47,8 @@ function invertColor(hex: string, bw: boolean = true): string {
     return "#" + StringUtil.padZero(stringR) + StringUtil.padZero(stringG) + StringUtil.padZero(stringB);
 }
 
-export default {getColorByName, invertColor};
+export default {
+    getColorByUserOrName,
+    getColorByName,
+    invertColor,
+};
