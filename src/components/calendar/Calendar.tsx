@@ -200,9 +200,7 @@ export default function Calendar() {
                 toolbar: CalendarToolbar,
             }}
         />
-        <Divider
-            sx={{pt: 2}}
-        />
+
         <CalendarSummary
             events={events}
             users={users}

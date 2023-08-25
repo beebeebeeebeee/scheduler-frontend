@@ -11,6 +11,11 @@ import {
 } from "@mui/material";
 
 const theme = createTheme({
+    palette: {
+        primary: {
+            main: '#79656c'
+        }
+    },
     typography: {
         fontFamily: '"Aboreto", cursive',
     }
